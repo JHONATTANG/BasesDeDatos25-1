@@ -1,0 +1,9 @@
+
+docker network create mysql-cluster-project
+
+docker run --name mysql-master-p -p 3308:3306 --network=mysql-cluster-project -e MYSQL_ROOT_PASSWORD=MasterPClave123 -d mysql:8.0 --server-id=1 --log-bin=mysql-bin
+
+
+docker run --name mysql-slave-1 -p 3310:3306 --network=mysql-cluster-project -e MYSQL_ROOT_PASSWORD=SlaveP1Clave123 -d mysql:8.0
+docker run --name mysql-slave-2 -p 3311:3306 --network=mysql-cluster-project -e MYSQL_ROOT_PASSWORD=SlaveP2Clave123 -d mysql:8.0
+docker run --name mysql-slave-3 -p 3312:3306 --network=mysql-cluster-project -e MYSQL_ROOT_PASSWORD=SlaveP3Clave123 -d mysql:8.0
