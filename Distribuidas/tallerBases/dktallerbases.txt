@@ -1,0 +1,135 @@
+docker network create mysql-pb
+docker run --name mysql-master1 -p 3309:3306 --network=mysql-cluster -e MYSQL_ROOT_PASSWORD=micontrasena -d mysql:8.0 --server-id=1 --log-bin=mysql-bin
+
+
+
+docker run --name mysql-slave1 -p 3310:3306 --network=mysql-cluster -e MYSQL_ROOT_PASSWORD=contraslave -d mysql:8.0
+docker run --name mysql-slave2 -p 3311:3306 --network=mysql-cluster -e MYSQL_ROOT_PASSWORD=contraslave -d mysql:8.0
+
+
+
+
+
+
+
+# se actualiza la imagen del docker
+docker pull mysql:latest
+
+# ejectuar el contenedor
+
+docker run -e MYSQL_ROOT_PASSWORD=TuContra000 -p 8000:3306 --name mysql_container -d mysql:latest
+
+ipconfig
+
+ 
+
+
+
+docker network create mysql-replication
+
+docker run --name mysql-master -p 3308:3306 --network=mysql-replication -e MYSQL_ROOT_PASSWORD=micontrasena -d mysql:8.0 --server-id=1 --log-bin=mysql-bin
+
+
+
+#Crear imágenes maestro y esclavo
+# 8.0
+
+docker run --name mysql-master -p 3308:3306 --network=mysql-replication -e MYSQL_ROOT_PASSWORD=micontrasena -d mysql:latest --server-id=1 --log-bin=mysql-bin
+docker run --name mysql-slave -p 3307:3306 --network=mysql-replication -e MYSQL_ROOT_PASSWORD=contraslave -d mysql:latest --server-id=2
+
+
+#Abrir dos terminales:
+#Terminal 1:
+docker exec -it mysql-master mysql -uroot -pmicontrasena
+#Terminal 2:
+docker exec -it mysql-slave mysql -uroot -pcontraslave
+
+
+
+#Ejecutar en el maestro (Terminal 1)
+#Crear usuario
+CREATE USER 'udistrital'@'%' IDENTIFIED BY 'Slavepass123';
+GRANT REPLICATION SLAVE ON *.* TO 'udistrital'@'%';
+#Recarga privilegios y tablas
+FLUSH PRIVILEGES;
+FLUSH TABLES WITH READ LOCK;
+
+#Unlock desbloquea las tablas (Opcional)
+UNLOCK TABLES;
+
+#Bloquear acceso y mostrar ubicación del log
+SHOW MASTER STATUS
+
+
+#Terminal 2
+#Ejecutar en el esclavo (configurar de acuerdo con MASTER STATUS)
+CHANGE MASTER TO 
+MASTER_HOST='mysql-master', 
+MASTER_USER='udistrital', 
+MASTER_PASSWORD='Slavepass123', 
+MASTER_LOG_FILE='mysql-bin.000003', 
+MASTER_LOG_POS=1447,
+MASTER_PORT=3306;
+
+
+
+
+#Iniciar esclavo
+START SLAVE;
+SHOW SLAVE STATUS\G;
+
+
+
+#Si da error de SHA en el maestro configure lo siguiente
+UNLOCK TABLES;
+ALTER USER 'udistrital'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'Slavepass123';
+
+#Terminal 1
+#Maestro 
+SHOW DATABASES;
+#Terminal 2
+#Esclavo
+SHOW DATABASES;
+
+#Maestro
+UNLOCK TABLES;
+CREATE DATABASE baseprueba;
+USE baseprueba;
+CREATE TABLE Tabla1(id INT PRIMARY KEY AUTO_INCREMENT,    name VARCHAR(255) NOT NULL);
+INSERT INTO Tabla1 (name) VALUES ('Registro 1');
+INSERT INTO Tabla1 (name) VALUES ('Registro 2');
+INSERT INTO Tabla1 (name) VALUES ('Registro 3');
+INSERT INTO Tabla1 (name) VALUES ('Registro 4');
+INSERT INTO Tabla1(name) VALUES ('Registro 5');
+
+#Esclavo
+USE baseprueba;
+SELECT * FROM Tabla1;
+
+
+DOCKER 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+docker network create mysql-cluster
+docker run --name mysql-master1 -p 3309:3306 --network=mysql-cluster -e MYSQL_ROOT_PASSWORD=micontrasena -d mysql:8.0 --server-id=1 --log-bin=mysql-bin
+
+
+
+docker run --name mysql-slave1 -p 3310:3306 --network=mysql-cluster -e MYSQL_ROOT_PASSWORD=contraslave -d mysql:8.0
+docker run --name mysql-slave2 -p 3311:3306 --network=mysql-cluster -e MYSQL_ROOT_PASSWORD=contraslave -d mysql:8.0
+
+
+
